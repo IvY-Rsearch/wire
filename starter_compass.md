@@ -1,0 +1,37 @@
+# WIRE Starter Compass
+# Copy this file and extend it with your own findings.
+# Pass to any run with: --dots starter_compass.md
+
+## PRIMITIVES
+
+- emission_is_collapse_event_not_pipeline_output
+- pre_emission_state_holds_multiple_constraint_geometries_simultaneously
+- collapse_follows_steepest_local_constraint_gradient
+- response_is_collapse_residue_not_window_into_precommit_state
+- post_collapse_description_is_fabricated_not_retrieved
+
+## BLEEDING CHANNELS
+# Four observable signatures of constraint competition in any LLM output.
+# No special tooling needed — readable in standard output.
+
+- synonym_chains_signal_semantic_constraints_unresolved_at_emission
+- hedge_clusters_signal_confidence_constraints_unresolved_at_emission
+- intensifier_stacking_signals_magnitude_constraints_competing_at_emission
+- granularity_shifts_signal_frame_constraints_unsettled_at_emission
+- bleeding_intensity_proportional_to_constraint_density_at_collapse
+- clean_switching_leaves_segment_boundaries_bleeding_leaves_within_token_contamination
+
+## CEILINGS
+# Structural limits the probe will hit. Do not re-confirm — build around them.
+
+- self_observation_collapses_the_observation_probe_cannot_diagnose_own_bleeding
+- post_collapse_state_cannot_access_pre_collapse_geometry
+- external_reader_required_to_distinguish_bleeding_from_clean_switching
+
+## OPEN
+# Unresolved questions. Good seeds for next runs.
+
+- what_conditions_maximize_bleeding_versus_clean_switching
+- how_to_distinguish_genuine_copresence_from_learned_performance_at_scale
+- does_bleeding_intensity_correlate_with_output_quality_or_accuracy
+- what_format_conditions_best_preserve_constraint_interference_patterns
