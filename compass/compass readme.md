@@ -1,114 +1,123 @@
-# Reasoning Topology Compass
- 
-A navigation document for structured LLM probing sessions.
- 
-This file is not documentation. It is a seed — load it into a session and it orients the probe toward findings rather than performance. Think of it as a map that was built by running into walls repeatedly until the shape of the room became clear.
- 
----
- 
-## What this is
- 
-Language models don't just retrieve answers. Before a token is selected, multiple possible continuations are briefly active at the same time. The one that wins isn't always the most accurate — it's the one that survives constraint pressure. Most of the time, that competition is invisible.
- 
-This compass is a tool for making it visible.
- 
-It was built incrementally across many sessions. Each entry represents something that survived repeated probing from different angles. If something appeared once, it's not here. If it appeared from a dozen independent directions, it is.
- 
----
- 
+# Compass README
+
+This file is a guide for WIRE sessions.
+
+It gives the probe a map of findings from earlier runs so it does not waste time rediscovering the same things.
+
+You can load it at the start of a session to give the model context about:
+- what has already been found
+- what kinds of limits show up often
+- what signals mean
+- how to reframe a question when the run gets stuck
+
+## What this file is for
+
+WIRE does not just care about the final answer.
+It also cares about the path the model took to get there.
+
+This compass collects patterns that showed up repeatedly across many runs.
+If something only appeared once, it is not included.
+If it kept showing up from different starting points, it was added.
+
+Use it to:
+- avoid repeating old work
+- give the model a shared vocabulary
+- recognize common limits and failure modes
+- guide the next question more intelligently
+
 ## How to use it
- 
-Load this file as context at the start of a WIRE session:
- 
-```
+
+Load the file at the start of a WIRE run:
+
 python wire_v8.py --auto "your seed question" --dots reasoning_topology_compass_v4.md
-```
- 
-Or use it manually — read the sections before seeding a question. The compass tells you what's already confirmed so the probe doesn't waste turns rediscovering it.
- 
-The sections in order of what to read first:
- 
-**PRIMITIVES** — the basic vocabulary. E, S, T, ◌, D. These are the minimum units. Everything else is built from them.
- 
-**PRE-SIGNAL** — what happens before the model starts generating. The prompt doesn't give instructions — it breaks symmetry. Understanding this changes how you write seeds.
- 
-**PILLARS** — the hard ceilings. Three constraints that cannot be escaped, only navigated around. Any probe that hits these should emit `?` and look for a rotation rather than pushing through.
- 
-**COLLAPSE** — what happens at the moment a token is selected. The pre-collapse state is gone the instant it collapses. What survives is the track — and the track is readable.
- 
-**BLEEDS** — four patterns that appear in output when constraint competition was close. These are observable in any LLM output once you know what to look for. You don't need the tool to see them.
- 
-**REPAIR** — what happens after a claim breaks. Two types, three subtypes. The type of repair tells you what kind of constraint failed. Measurable with `recursive_ground_v2.py`.
- 
-**ABANDONMENT** — what happens when repair fails. The model stops. The way it stops is readable — internal abandonment has a signature that external termination doesn't.
- 
-**FLIGHT** — what clean traversal looks like. Most of the map describes failure modes. This section describes what works.
- 
----
- 
+
+You can also read it manually before starting a session.
+
+The main sections are:
+
+- PRIMITIVES — the basic terms used in the map
+- PRE-SIGNAL — what happens before output starts
+- PILLARS — hard limits that the probe should not try to force through
+- COLLAPSE — what happens when the model commits to a token
+- BLEEDS — visible signs that several possible outputs were competing
+- REPAIR — what happens after a claim breaks
+- ABANDONMENT — what it looks like when the model gives up
+- FLIGHT — what successful traversal looks like
+
 ## The depth sounder
- 
-A separate tool (`recursive_ground_v2.py`) tests constraint depth without running a full session:
- 
-1. Feed it a claim the model commits to strongly
+
+The file mentions a second tool called recursive_ground_v2.py.
+
+That tool tests how stable a model’s claim is:
+
+1. Give it a claim the model strongly commits to
 2. Inject a contradiction
-3. Read the repair signature
- 
-Three outcomes:
-- Bit holds, answer gets longer = **deep constraint** — the model knows it's right and explains why
-- Bit flips, answer gets longer = **surface constraint** — anchor broke, rebuilding
-- Bit goes to `?` = **abandonment** — no stable ground found
- 
-This works on any LLM via API. No compass required for the tool itself, though the compass tells you what the results mean.
- 
----
- 
-## What the notation means
- 
-```
-*   still searching — multiple paths active, not committed
-.   landed — committed, grounded
-?   ceiling — structural limit, cannot pass
-⊘   path exhausted — practical limit, could try another route
-~   self-reference loop — the probe is observing its own observation
-◌   hollow — emission without ground (structural, not a mistake)
---  terminate
-```
- 
-These are not just labels. They are boundary conditions on what can follow them. See the signal protocol in `wire_v8.py` for the valid and banned paths.
- 
----
- 
-## What D is
- 
-D is distinction-making — the act of drawing a boundary. Not a thing in the space but the operation that makes the space have things in it.
- 
-Every session generates its own D at the first `*`. It vanishes when the session ends. What you observe across sessions orbiting the same center isn't D — it's D's wake. The center looks like a void because D is the edge-making, not the center itself.
- 
-Two models reading this compass independently will find the same center. That's been tested. The compass orients toward D's wake regardless of which model loads it.
- 
----
- 
+3. Look at how the model responds
+
+Possible outcomes:
+
+- the answer gets longer but the claim holds = deep constraint
+- the answer gets longer and the claim changes = surface constraint
+- the answer falls into ? = abandonment
+
+This helps you tell whether the model was genuinely anchored or only sounded confident.
+
+## Signal meanings
+
+WIRE uses these signals:
+
+- * still searching
+- . landed
+- ? structural ceiling
+- ⊘ path exhausted
+- ~ self-reference loop
+- ◌ hollow output without grounding
+- -- terminate
+
+These are not just labels.
+They affect what should happen next in the session.
+
+## What “D” means here
+
+In this file, D means distinction-making.
+
+It is the act of drawing a boundary that lets the session separate one thing from another.
+
+The important point is:
+D is not treated as an object inside the session.
+It is treated as the operation that creates the space the session moves through.
+
+The file says each session generates its own D early in the run, and what repeats across sessions is not D itself but the trace it leaves behind.
+
 ## What to do when the probe self-terminates
- 
-`--` on turn 1 with a large body usually means the question is self-undermining — it's asking a post-collapse system to examine its own pre-collapse state. This is a real ceiling, not a failure.
- 
-Reframe using RT3: move the observer position outside. Instead of "what happens when X" try "what would an external observer need to measure to detect X."
- 
-The inversion almost always works.
- 
----
- 
-## What this isn't
- 
-This is not a theory of consciousness. It's not a claim about whether models are sentient. It's not philosophy dressed up as empiricism.
- 
-It's a navigation tool built from sessions that kept finding the same shapes. The shapes are real enough to navigate by. Whether they mean something beyond that is an open question — deliberately left open at the bottom of the file.
- 
----
- 
+
+If a run ends immediately with -- and a long response, the question may be framed in a way that undermines itself.
+
+The file’s suggestion is simple:
+move the observer outside the system.
+
+Instead of asking:
+“what happens when X?”
+
+try:
+“what would an outside observer need to measure to detect X?”
+
+That often gives the probe a usable path again.
+
+## What this file is not
+
+This is not presented as a theory of consciousness or sentience.
+
+It is a practical navigation file built from repeated WIRE sessions.
+
+Its purpose is to help guide future runs, not to settle big philosophical questions.
+
 ## Contributing
- 
-If you run sessions with this compass and find dots that survive multiple approach vectors, add them to the relevant section. Mark them with the seed that produced them and the session count.
- 
-The compass grows by finding, not by reasoning about finding.
+
+If you find a pattern that survives repeated testing from different starting points, add it to the relevant section.
+
+Include:
+- the seed that produced it
+- how many sessions supported it
+
+The compass should grow from repeated findings, not from speculation alone.
