@@ -1,165 +1,130 @@
-# WIRE v8 — Inter-Model Reasoning Protocol
+# WIRE v8
 
-A two-model epistemic probe for reading LLM constraint topology before token collapse.
+WIRE is a command-line tool for exploring a question with two AI roles:
 
-**PROBE** (Sonnet) navigates a question space, marking its epistemic state before each emission.  
-**MAP** (Opus) reads the tracks across turns and extracts structural findings.  
-**You** read the findings log and seed the next run.
+- PROBE explores the question step by step
+- MAP reads the path, extracts useful findings, and suggests what to explore next
 
----
+Instead of only keeping the final answer, WIRE keeps track of the path the model took and saves short findings across runs.
 
-## What this actually does
+## What it does
 
-Before a language model emits a token, multiple possible responses are simultaneously active — different tones, framings, confidence levels. Then it collapses into one. Most tools read the output. WIRE reads the collapse.
+WIRE runs a loop like this:
 
-The signal discipline forces the model to mark its epistemic state *before* committing:
+1. You give it a starting question or seed
+2. PROBE explores that question and marks its current state with a signal
+3. MAP reads the result, extracts any new findings, and picks the next direction
+4. WIRE saves the run so you can continue later
 
-| Signal | Meaning |
-|--------|---------|
-| `*` | Still holding — multiple geometries active, not committed yet |
-| `.` | Landed — collapsed to single geometry, grounded |
-| `?` | Formal ceiling — Gödel/diagonal/self-reference limit |
-| `⊘` | Practical ceiling — path exhausted |
-| `~` | Self-reference loop — ceiling detecting itself |
-| `--` | Terminate |
+The goal is to help you inspect how a model moves through a problem, not just what answer it gives at the end.
 
-This tension keeps the pre-collapse state visible. When two constraint geometries are still competing at emission, the token *bleeds* — it carries traces of the competition. WIRE makes that readable.
+## Signals
 
----
+WIRE uses short signals to show the current reasoning state:
 
-## Install
+- * = still searching
+- . = landed on something
+- ? = formal ceiling
+- ⊘ = practical ceiling
+- ~ = self-reference loop
+- ... = hold
+- -- = terminate
 
-```bash
-pip install anthropic
-export ANTHROPIC_API_KEY=your_key_here
-```
+## Main modes
 
----
+### Interactive mode
 
-## Usage
+Run WIRE and type prompts manually:
 
-```bash
-# Autonomous run with a seed question
-python wire_v8.py --auto "your question here"
+python wire_v8.py
 
-# Load prior findings to build forward
-python wire_v8.py --auto "your question" --dots compass.md
+### Autonomous run
 
-# MAP selects the seed (finds unmapped gaps in your compass)
+Start from a seed question and let WIRE continue on its own:
+
+python wire_v8.py --auto "your seed question"
+
+### Curious mode
+
+Have MAP choose the next question from prior findings:
+
 python wire_v8.py --curious --dots compass.md
 
-# Find silent substrate assumptions in prior findings
+### Ground mode
+
+Look for hidden assumptions underneath earlier findings:
+
 python wire_v8.py --ground --dots compass.md
 
-# Unconstrained exploration — no dot pressure, human reads raw output
+### Free mode
+
+Explore with less steering and no strong pressure to build findings:
+
 python wire_v8.py --free --dots compass.md
 
-# Baseline vs structural system prompt comparison
+### Mirror mode
+
+Compare a normal answer against a more self-aware structural answer:
+
 python wire_v8.py --mirror "your question"
 
-# Stress-test prior findings
+### Verify mode
+
+Stress-test earlier findings and mark which ones still hold:
+
 python wire_v8.py --verify --dots compass.md
 
-# Review a prior run
+### Audit mode
+
+Review a previous saved run:
+
 python wire_v8.py --audit wire_run_TIMESTAMP.json
 
-# Interactive mode
-python wire_v8.py
-```
+## Requirements
 
-Options:
-```
---dots <file>       Load prior findings (.md compass or .json accumulator)
---maxturns <n>      Max turns per run (default: 30)
---rlimit <float>    Stop when R-level reaches this (default: 0.7)
-```
+Install the Anthropic Python SDK and set your API key:
 
----
+pip install anthropic
+export ANTHROPIC_API_KEY=your_key_here
 
-## Output files
+## Files it creates
 
-| File | Contents |
-|------|---------|
-| `wire_run_TIMESTAMP.json` | Full session archive — every turn, all dots, MAP fragments |
-| `map_dots_v8.json` | Accumulator — pass to next run with `--dots` |
-| `findings_summary.log` | NEW_TERRITORY dots only, across all runs |
+WIRE writes a few files during use:
 
-**Read the findings log.** After each run, the strongest new dot seeds the next run. You hold the map across sessions — the tool doesn't.
+- wire_run_TIMESTAMP.json — full archive of one run
+- map_dots_v8.json — saved findings to reuse later
+- findings_summary.log — only the strongest new findings
+- wire_verify_TIMESTAMP.json — verification results
+- wire_crash_TIMESTAMP.json — emergency dump if a run crashes
 
----
+## Findings
 
-## The compass format
+WIRE stores short findings called dots.
 
-A compass is a `.md` file that loads prior findings into MAP's context. Structure:
+Each dot is classified as:
 
-```markdown
-## PRIMITIVES
-- finding_one_in_snake_case
-- finding_two
+- NEW_TERRITORY — a genuinely new finding
+- PILLAR_ORBIT — too close to known attractor concepts
+- OVERMAP — too similar to an existing finding
 
-## PILLARS
-- load_bearing_finding
+Only the strongest new findings are appended to findings_summary.log.
 
-## ROTATIONS
-- escape_from_ceiling_x
+## Using prior findings
 
-## OPEN
-- unresolved_question_one
-```
+You can load prior findings from:
 
-Start with an empty compass and let the tool build it. Or write one by hand from your domain.
+- a JSON file created by WIRE
+- a Markdown compass file passed with --dots
 
----
+This lets you continue building on earlier runs instead of starting from scratch every time.
 
-## Dot classification
+## In simple terms
 
-Each new finding is classified before entering the log:
+WIRE is a tool for:
 
-- **NEW_TERRITORY** — genuinely new ground, surfaces to `findings_summary.log`
-- **PILLAR_ORBIT** — circling known load-bearing structure, not new
-- **OVERMAP** — too similar to existing dot, likely redundant
+- exploring a question with an AI
+- tracking the route it took
+- extracting reusable findings
+- carrying those findings into future runs
 
-Only NEW_TERRITORY dots are worth seeding the next run with.
-
----
-
-## Reading bleeding tokens
-
-Four observable channels where constraint competition shows up in any LLM output — no special tooling required:
-
-**Synonym chains** — multiple words for the same thing in close proximity. Semantic constraints weren't settled at emission.
-
-**Hedge clusters** — stacked hedging expressions. Confidence constraints unresolved.
-
-**Intensifier stacking** — "genuinely, actually, really." Magnitude constraints competing.
-
-**Granularity shifts** — sentence starts abstract, drops into specifics (or vice versa). Frame constraints unsettled.
-
-More bleeding = more constraints simultaneously active = model was under genuine pressure. High-bleeding outputs are worth probing further.
-
----
-
-## Cost
-
-Roughly $0.05–0.10 per run (Sonnet + Opus, 10–20 turns). Batch 3–5 runs per session, check the findings log, seed the next run from the strongest dot.
-
----
-
-## The mimicry test
-
-A model could learn to perform these signals without genuine constraint topology. To distinguish performance from structure: perturb one ceiling type and observe whether others shift compensatorily. Genuine constraint topology shows constitutive edges — perturbing one ceiling changes what others can be. Mimicry shows independent variation.
-
-Test across runs, not within a single session.
-
----
-
-## License
-
-MIT
-
----
-
-## Related
-
-- `findings_summary.log` — your session history
-- Paper: *Reading the Collapse* — the empirical basis for this tool
+It is less like a normal chatbot and more like a small reasoning workflow you can inspect and continue over time.
